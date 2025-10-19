@@ -1,0 +1,130 @@
+{
+    "version": 1,
+    "name": "PlayerControls",
+    "maps": [
+        {
+            "name": "Player",
+            "id": "80cf5b57-67b0-48bd-87f8-e7f56f3d74bc",
+            "actions": [
+                {
+                    "name": "GerakAtas",
+                    "type": "Button",
+                    "id": "c22437ce-5e2b-4c54-a41f-06a35e55d758",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "GerakBawah",
+                    "type": "Button",
+                    "id": "00cdae18-1c7f-4b58-af36-8468f2e0b3e8",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Tembak",
+                    "type": "Button",
+                    "id": "06be6949-17ba-418d-a509-52c0738b60f1",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "bd144152-e5e5-4cd0-a230-9b8c23e255da",
+                    "path": "<Keyboard>/w",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GerakAtas",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "31eb6832-e346-4b86-8ff3-0e5dc86e1dc9",
+                    "path": "<HID::Twin USB Joystick>/hat/up",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GerakAtas",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d3a16c2a-1cb6-4f03-b068-3580f9e29353",
+                    "path": "<HID::Twin USB Joystick>/stick/up",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GerakAtas",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c78556a8-0af5-47c6-b7fd-ae01a87ca094",
+                    "path": "<Keyboard>/s",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GerakBawah",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "cc7dcf67-3abf-4991-b3a6-de80d0b8c76d",
+                    "path": "<HID::Twin USB Joystick>/hat/down",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GerakBawah",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a11cc00f-3c3b-4f13-9349-7f25970e2a53",
+                    "path": "<HID::Twin USB Joystick>/stick/down",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GerakBawah",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1d49ee9f-c4b1-4bba-9bbc-f5388fdd2467",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Tembak",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "186aff2e-86d2-4cfe-acda-881607ab6321",
+                    "path": "<HID::Twin USB Joystick>/button4",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Tembak",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
