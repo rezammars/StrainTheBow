@@ -9,41 +9,67 @@ public class GameManager : MonoBehaviour
 
     [Header("Game Settings")]
     public int baseMaxLives = 3;
-    public int totalWaves = 5;
-
-    [Header("UI References")]
-    public Text livesText;
-    public Text waveText;
-    public Text enemiesRemainingText;
-    public Text scoreText;
-    public GameObject gameOverPanel;
-    public GameObject winPanel;
-    public GameObject waveStartPanel;
-    public Text waveStartText;
+    public int totalWaves = 3;
 
     [Header("Wave Settings")]
-    public float timeBetweenWaves = 3f;
+    public float timeBetweenWaves = 3f; // ⭐ TAMBAH INI
 
-    private int currentBaseLives;
-    private int currentWave = 0;
-    private int enemiesInCurrentWave;
-    private int enemiesDefeatedInWave;
-    private int currentScore = 0;
+    [Header("UI References")]
+    public ScoreDisplay scoreDisplay;
+    public WaveDisplay waveDisplay;
+    public HeartsDisplay heartsDisplay;
+
+    [Header("Game State")]
+    public int currentScore = 0;
+    public int currentBaseLives { get; private set; }
+    public int currentWave { get; private set; }
+    public int enemiesInCurrentWave { get; private set; }
+    public int enemiesDefeatedInWave { get; private set; }
+
+    [Header("Game Over UI")]
+    public GameOverUI gameOverUI;
+
     private bool isWaveActive = false;
     private bool gameEnded = false;
 
     void Awake()
     {
-        if (instance == null) instance = this;
-        else Destroy(gameObject);
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
     }
 
     void Start()
     {
         currentBaseLives = baseMaxLives;
         currentScore = 0;
-        UpdateUI();
+        currentWave = 0;
+
+        if (PlayerPrefs.GetInt("ShouldContinue", 0) == 1)
+        {
+            LoadContinueProgress();
+        }
+
+        UpdateAllUI();
         StartCoroutine(StartWaveSequence());
+    }
+
+    void LoadContinueProgress()
+    {
+        currentWave = PlayerPrefs.GetInt("CurrentWave", 0);
+        currentScore = PlayerPrefs.GetInt("PlayerScore", 0);
+        currentBaseLives = PlayerPrefs.GetInt("BaseLives", 3);
+
+        PlayerPrefs.SetInt("ShouldContinue", 0);
+        PlayerPrefs.Save();
+
+        Debug.Log($"🎮 Continued - Wave: {currentWave}, Score: {currentScore}, Lives: {currentBaseLives}");
     }
 
     IEnumerator StartWaveSequence()
@@ -53,23 +79,16 @@ public class GameManager : MonoBehaviour
             currentWave++;
             StartNewWave(currentWave);
 
-            if (waveStartPanel != null)
-            {
-                waveStartText.text = "WAVE " + currentWave;
-                waveStartPanel.SetActive(true);
-                yield return new WaitForSeconds(2f);
-                waveStartPanel.SetActive(false);
-            }
+            // ⭐ TUNGGU SPAWNING SELESAI
+            yield return WaitForWaveSpawningComplete();
+            
+            // ⭐ TUNGGU WAVE SELESAI (SEMUA ENEMY MATI/SAMPAI BASE)
+            yield return WaitForWaveCompletion();
 
-            yield return new WaitForSeconds(1f);
-
-            isWaveActive = true;
-            WaveManager.instance.StartWave(currentWave, enemiesInCurrentWave);
-
-            yield return new WaitUntil(() => !isWaveActive || gameEnded);
-
+            // ⭐ TUNGGU ANTARA WAVE
             if (!gameEnded && currentWave < totalWaves)
             {
+                Debug.Log($"⏰ Waiting {timeBetweenWaves}s for Wave {currentWave + 1}...");
                 yield return new WaitForSeconds(timeBetweenWaves);
             }
         }
@@ -82,25 +101,113 @@ public class GameManager : MonoBehaviour
 
     void StartNewWave(int waveNumber)
     {
-        enemiesInCurrentWave = CalculateEnemiesInWave(waveNumber);
+        // Set jumlah enemy
+        enemiesInCurrentWave = GetEnemiesForWave(waveNumber);
         enemiesDefeatedInWave = 0;
         isWaveActive = true;
-        UpdateUI();
 
-        Debug.Log($"Starting Wave {waveNumber} with {enemiesInCurrentWave} enemies");
+        Debug.Log($"🚀 GameManager: Starting Wave {waveNumber}");
+
+        // ⭐ TELL WAVEMANAGER TO START THIS WAVE
+        if (WaveManager.instance != null)
+        {
+            WaveManager.instance.currentWave = waveNumber;
+            WaveManager.instance.StartNextWave();
+        }
+        else
+        {
+            Debug.LogError("❌ WaveManager.instance is null!");
+        }
+
+        // Show wave display
+        if (waveDisplay != null)
+        {
+            waveDisplay.ShowWave(waveNumber);
+        }
+
+        UpdateAllUI();
     }
 
-    int CalculateEnemiesInWave(int wave)
+    // ⭐ METHOD: TUNGGU SPAWNING SELESAI
+    IEnumerator WaitForWaveSpawningComplete()
     {
-        return 5 + (wave * 2);
+        Debug.Log("⏳ Waiting for wave spawning to complete...");
+        
+        if (WaveManager.instance != null)
+        {
+            // Tunggu sampai WaveManager selesai spawning
+            while (WaveManager.instance.IsSpawning())
+            {
+                yield return new WaitForSeconds(0.5f);
+            }
+        }
+        
+        Debug.Log("✅ Wave spawning completed!");
     }
 
+    // ⭐ METHOD: TUNGGU WAVE SELESAI
+    IEnumerator WaitForWaveCompletion()
+    {
+        Debug.Log($"⏳ Waiting for Wave {currentWave} completion...");
+        
+        // Tunggu sampai semua enemy dihitung
+        while (enemiesDefeatedInWave < enemiesInCurrentWave)
+        {
+            yield return new WaitForSeconds(0.5f);
+        }
+        
+        Debug.Log($"✅ Wave {currentWave} completed!");
+    }
+
+    int GetEnemiesForWave(int wave)
+    {
+        // Wave 1: 10, Wave 2: 15, Wave 3: 20
+        switch (wave)
+        {
+            case 1: return 10;
+            case 2: return 15;
+            case 3: return 20;
+            default: return 5;
+        }
+    }
+
+    // ⭐ ENEMY MATI DITEMBAK - DAPAT SCORE
+    public void EnemyKilledByPlayer()
+    {
+        if (gameEnded) return;
+
+        enemiesDefeatedInWave++;
+        AddScore(10);
+
+        Debug.Log($"🎯 Enemy killed: {enemiesDefeatedInWave}/{enemiesInCurrentWave}");
+        UpdateAllUI();
+        SaveGameProgress();
+
+        // ⭐ CEK APAKAH WAVE SUDAH SELESAI
+        CheckWaveCompletion();
+    }
+
+    // ⭐ ENEMY SAMPAI BASE - TIDAK DAPAT SCORE
     public void EnemyReachedBase()
     {
         if (gameEnded) return;
 
+        enemiesDefeatedInWave++;
         currentBaseLives--;
-        UpdateUI();
+
+        Debug.Log($"🏠 Enemy reached base: {enemiesDefeatedInWave}/{enemiesInCurrentWave}");
+
+        // Update hearts
+        if (heartsDisplay != null)
+        {
+            heartsDisplay.UpdateHeartsDisplay();
+        }
+
+        UpdateAllUI();
+        SaveGameProgress();
+
+        // ⭐ CEK APAKAH WAVE SUDAH SELESAI
+        CheckWaveCompletion();
 
         if (currentBaseLives <= 0)
         {
@@ -108,46 +215,54 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void EnemyDefeated()
+    // ⭐ METHOD: CEK WAVE COMPLETION
+    void CheckWaveCompletion()
     {
-        if (gameEnded) return;
-
-        enemiesDefeatedInWave++;
-        AddScore(10);
-        UpdateUI();
-
         if (enemiesDefeatedInWave >= enemiesInCurrentWave)
         {
-            WaveCompleted();
+            // ⭐ TAPI CEK DULU APAKAH MASIH ADA ENEMY DI SCENE
+            Enemy[] remainingEnemies = FindObjectsOfType<Enemy>();
+            if (remainingEnemies.Length == 0)
+            {
+                Debug.Log($"✅ Wave {currentWave} truly completed!");
+                isWaveActive = false;
+            }
+            else
+            {
+                Debug.Log($"⚠️ Counter complete but {remainingEnemies.Length} enemies still in scene");
+            }
         }
     }
 
     public void AddScore(int scoreToAdd)
     {
         currentScore += scoreToAdd;
-        UpdateUI();
-    }
-
-    void WaveCompleted()
-    {
-        isWaveActive = false;
-
-        if (currentWave >= totalWaves)
-        {
-            WinGame();
-        }
-        else
-        {
-            Debug.Log($"Wave {currentWave} completed! Preparing for next wave...");
-        }
+        Debug.Log($"💰 Score +{scoreToAdd} = {currentScore}");
     }
 
     void GameOver()
     {
+        if (gameEnded) return;
+
         gameEnded = true;
-        gameOverPanel.SetActive(true);
-        Debug.Log("Game Over - 3 enemy reached your base!");
         Time.timeScale = 0f;
+
+        Debug.Log("💀 GAME OVER!");
+        
+        if (gameOverUI != null)
+        {
+            gameOverUI.ShowGameOver(false); // false = game over (bukan win)
+        }
+        else
+        {
+            Debug.LogError("❌ gameOverUI reference is null!");
+        }
+
+        // Reset save data
+        PlayerPrefs.DeleteKey("CurrentWave");
+        PlayerPrefs.DeleteKey("PlayerScore");
+        PlayerPrefs.DeleteKey("BaseLives");
+        PlayerPrefs.Save();
     }
 
     void WinGame()
@@ -155,26 +270,34 @@ public class GameManager : MonoBehaviour
         if (gameEnded) return;
 
         gameEnded = true;
-        winPanel.SetActive(true);
-        Debug.Log("You Win! All waves completed!");
         Time.timeScale = 0f;
+
+        Debug.Log("🎉 YOU WIN!");
+
+        if (gameOverUI != null)
+        {
+            gameOverUI.ShowGameOver(true); // true = win
+        }
     }
 
-    void UpdateUI()
+    void UpdateAllUI()
     {
-        livesText.text = "Base Lives: " + currentBaseLives + "/" + baseMaxLives;
-        waveText.text = "Wave: " + currentWave + "/" + totalWaves;
-        scoreText.text = "Score: " + currentScore;
+        if (scoreDisplay != null)
+            scoreDisplay.UpdateScoreDisplay();
 
-        if (isWaveActive)
-        {
-            int remaining = enemiesInCurrentWave - enemiesDefeatedInWave;
-            enemiesRemainingText.text = "Enemies: " + remaining;
-        }
-        else
-        {
-            enemiesRemainingText.text = "Prepare for next wave!";
-        }
+        if (waveDisplay != null)
+            waveDisplay.UpdateWaveDisplay();
+
+        if (heartsDisplay != null)
+            heartsDisplay.UpdateHeartsDisplay();
+    }
+
+    void SaveGameProgress()
+    {
+        PlayerPrefs.SetInt("CurrentWave", currentWave);
+        PlayerPrefs.SetInt("PlayerScore", currentScore);
+        PlayerPrefs.SetInt("BaseLives", currentBaseLives);
+        PlayerPrefs.Save();
     }
 
     public void RestartGame()

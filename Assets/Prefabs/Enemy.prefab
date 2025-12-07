@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2014132059285470755}
   - component: {fileID: 8696990052415414996}
   - component: {fileID: 3721719590999400645}
-  - component: {fileID: 3670051632593842373}
+  - component: {fileID: 5891401731177720992}
   - component: {fileID: 6232598322215056058}
   m_Layer: 0
   m_Name: Enemy
@@ -29,7 +29,7 @@ Transform:
   m_GameObject: {fileID: 1933406394422072449}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -114,8 +114,8 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
---- !u!70 &3670051632593842373
-CapsuleCollider2D:
+--- !u!58 &5891401731177720992
+CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -146,9 +146,9 @@ CapsuleCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.871871, y: -1.1492815}
-  m_Size: {x: 22.58388, y: 26.951437}
-  m_Direction: 0
+  m_Offset: {x: -1.3, y: 1.48}
+  serializedVersion: 2
+  m_Radius: 9.49
 --- !u!114 &6232598322215056058
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -163,6 +163,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 5
   moveSpeed: 7
-  damage: 1
-  scoreValue: 10
-  baseTarget: {fileID: 0}
+  scoreValue: 0
+  movementType: 0
