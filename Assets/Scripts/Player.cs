@@ -16,14 +16,17 @@ public class Player : MonoBehaviour
     public float cooldownTembak = 0.5f;
 
     [Header("Input Control")]
-    private bool isInputEnabled = true; // ⭐ FLAG UNTUK ENABLE/DISABLE INPUT
-    private PlayerInput playerInput; // ⭐ REFERENCE KE PLAYERINPUT COMPONENT
+    private bool isInputEnabled = true;
+    private PlayerInput playerInput;
+
+    [Header("Animation")]
+    private PlayerAnimationController animController;
 
     [Header("Booster System")]
     public float redPotionCooldown = 10f;
     public float bluePotionCooldown = 12f;
     public float greenPotionCooldown = 10f;
-
+    
     // BOOSTER
     private bool isRedPotionActive = false;
     private bool isBluePotionActive = false;
@@ -46,7 +49,8 @@ public class Player : MonoBehaviour
 
     private bool isMovingUp = false;
     private bool isMovingDown = false;
-    private PlayerAnimationController animController;
+
+    private PotionPanelLayout potionPanel;
 
     void Start()
     {
@@ -59,7 +63,22 @@ public class Player : MonoBehaviour
             Debug.LogWarning("⚠️ PlayerInput component not found!");
         }
         
-        EnableInput(); // Pastikan input enabled di awal
+        animController = GetComponent<PlayerAnimationController>();
+        if (animController == null)
+        {
+            Debug.LogError("❌ PlayerAnimationController not found!");
+        }
+        else
+        {
+            Debug.Log("✅ PlayerAnimationController found and assigned");
+        }
+        
+        potionPanel = FindObjectOfType<PotionPanelLayout>();
+        if (potionPanel != null)
+        {
+            Debug.Log("✅ PotionPanelLayout found");
+        }
+        EnableInput();
     }
 
     void Update()
@@ -93,10 +112,8 @@ public class Player : MonoBehaviour
         }
     }
 
-    // ⭐ METHOD: UPDATE BOOSTER TIMERS
     void UpdateBoosterTimers()
     {
-        // Update active booster timers
         if (isRedPotionActive)
         {
             redPotionTimer -= Time.deltaTime;
@@ -124,10 +141,23 @@ public class Player : MonoBehaviour
             }
         }
         
-        // Update cooldown timers
-        if (redPotionCooldownTimer > 0f) redPotionCooldownTimer -= Time.deltaTime;
-        if (bluePotionCooldownTimer > 0f) bluePotionCooldownTimer -= Time.deltaTime;
-        if (greenPotionCooldownTimer > 0f) greenPotionCooldownTimer -= Time.deltaTime;
+        if (redPotionCooldownTimer > 0f) 
+        {
+            redPotionCooldownTimer -= Time.deltaTime;
+            if (redPotionCooldownTimer < 0f) redPotionCooldownTimer = 0f;
+        }
+    
+        if (bluePotionCooldownTimer > 0f) 
+        {
+            bluePotionCooldownTimer -= Time.deltaTime;
+            if (bluePotionCooldownTimer < 0f) bluePotionCooldownTimer = 0f;
+        }
+    
+        if (greenPotionCooldownTimer > 0f) 
+        {
+            greenPotionCooldownTimer -= Time.deltaTime;
+            if (greenPotionCooldownTimer < 0f) greenPotionCooldownTimer = 0f;
+        }
     }
 
     public void EnableInput()
@@ -144,7 +174,6 @@ public class Player : MonoBehaviour
     {
         isInputEnabled = false;
         
-        // Reset movement flags
         isMovingUp = false;
         isMovingDown = false;
         verticalInput = 0f;
@@ -176,8 +205,11 @@ public class Player : MonoBehaviour
     public void OnShoot(InputAction.CallbackContext context)
     {
         if (!isInputEnabled) return;
-        if (waktuCooldown <= 0f)
+        
+        if (context.performed && waktuCooldown <= 0f)
         {
+            Debug.Log("🔫 Shoot button pressed - Cooldown ready");
+            
             if (isBluePotionActive)
             {
                 ShootTriple();
@@ -187,21 +219,27 @@ public class Player : MonoBehaviour
                 Shoot();
             }
         }
+        else if (context.performed && waktuCooldown > 0f)
+        {
+            Debug.Log($"🔫 Shoot button pressed - Cooldown: {waktuCooldown:F2}s");
+        }
     }
 
-    // ⭐ METHOD BARU: BOOSTER INPUT
     public void OnRedPotion(InputAction.CallbackContext context)
     {
         if (!isInputEnabled) return;
-        if (context.started)
+        
+        if (context.performed)
         {
-            if (redPotionCooldownTimer <= 0f && !isRedPotionActive)
+            Debug.Log($"🔴 Red Potion pressed. Cooldown: {redPotionCooldownTimer:F1}s, Active: {isRedPotionActive}");
+        
+        if (redPotionCooldownTimer <= 0f && !isRedPotionActive)
             {
                 ActivateRedPotion();
             }
             else
             {
-                Debug.Log($"⏳ Red Potion cooldown: {redPotionCooldownTimer:F1}s");
+                Debug.Log($"⏳ Red Potion tidak bisa digunakan. Cooldown: {redPotionCooldownTimer:F1}s");
             }
         }
     }
@@ -209,15 +247,18 @@ public class Player : MonoBehaviour
     public void OnBluePotion(InputAction.CallbackContext context)
     {
         if (!isInputEnabled) return;
-        if (context.started)
+        
+        if (context.performed)
         {
+            Debug.Log($"🔵 Blue Potion pressed. Cooldown: {bluePotionCooldownTimer:F1}s, Active: {isBluePotionActive}");
+        
             if (bluePotionCooldownTimer <= 0f && !isBluePotionActive)
             {
                 ActivateBluePotion();
             }
             else
             {
-                Debug.Log($"⏳ Blue Potion cooldown: {bluePotionCooldownTimer:F1}s");
+                Debug.Log($"⏳ Blue Potion tidak bisa digunakan. Cooldown: {bluePotionCooldownTimer:F1}s");
             }
         }
     }
@@ -225,15 +266,18 @@ public class Player : MonoBehaviour
     public void OnGreenPotion(InputAction.CallbackContext context)
     {
         if (!isInputEnabled) return;
-        if (context.started)
+        
+        if (context.performed)
         {
+            Debug.Log($"🟢 Green Potion pressed. Cooldown: {greenPotionCooldownTimer:F1}s, Active: {isGreenPotionActive}");
+        
             if (greenPotionCooldownTimer <= 0f && !isGreenPotionActive)
             {
                 ActivateGreenPotion();
             }
             else
             {
-                Debug.Log($"⏳ Green Potion cooldown: {greenPotionCooldownTimer:F1}s");
+                Debug.Log($"⏳ Green Potion tidak bisa digunakan. Cooldown: {greenPotionCooldownTimer:F1}s");
             }
         }
     }
@@ -241,21 +285,28 @@ public class Player : MonoBehaviour
     void Shoot()
     {
         if (prefabPanah == null || titikTembak == null)
+        {
+            Debug.LogError("❌ Prefab Panah or Titik Tembak is null!");
             return;
+        }
         
+        Debug.Log("🎯 Calling PlayAttackAnim from Shoot()");
         if (animController != null)
         {
-            animController.PlayAttackAnimation();
+            animController.PlayAttackAnim();
+        }
+        else
+        {
+            Debug.LogError("❌ animController is null in Shoot()!");
         }
 
         GameObject panah = Instantiate(prefabPanah, titikTembak.position, Quaternion.identity);
         Rigidbody2D rb = panah.GetComponent<Rigidbody2D>();
 
-        // ⭐ APPLY GREEN POTION DAMAGE BOOST
         Panah panahController = panah.GetComponent<Panah>();
         if (panahController != null && isGreenPotionActive)
         {
-            panahController.damage = defaultDamage * 2; // ⭐ DOUBLE DAMAGE
+            panahController.damage = defaultDamage * 2;
         }
 
         Vector2 arahTembak = Vector2.right;
@@ -264,36 +315,40 @@ public class Player : MonoBehaviour
 
         waktuCooldown = cooldownTembak;
         
-        Debug.Log($"🔫 Normal shot - Cooldown: {cooldownTembak}");
+        Debug.Log($"🔫 Normal shot fired - Cooldown: {cooldownTembak}");
     }
 
-    // ⭐ METHOD BARU: TRIPLE SHOT
     void ShootTriple()
     {
         if (prefabPanah == null || titikTembak == null)
+        {
+            Debug.LogError("❌ Prefab Panah or Titik Tembak is null!");
             return;
+        }
         
+        Debug.Log("🎯 Calling PlayAttackAnim from ShootTriple()");
         if (animController != null)
         {
-            animController.PlayAttackAnimation();
+            animController.PlayAttackAnim();
+        }
+        else
+        {
+            Debug.LogError("❌ animController is null in ShootTriple()!");
         }
 
-        // Tembak 3 panah dengan sudut berbeda
-        float[] angles = { 15f, 0f, -15f }; // Atas, tengah, bawah
+        float[] angles = { 15f, 0f, -15f };
 
         foreach (float angle in angles)
         {
             GameObject panah = Instantiate(prefabPanah, titikTembak.position, Quaternion.identity);
             Rigidbody2D rb = panah.GetComponent<Rigidbody2D>();
 
-            // ⭐ APPLY GREEN POTION DAMAGE BOOST
             Panah panahController = panah.GetComponent<Panah>();
             if (panahController != null && isGreenPotionActive)
             {
-                panahController.damage = defaultDamage * 2; // ⭐ DOUBLE DAMAGE
+                panahController.damage = defaultDamage * 2;
             }
 
-            // Hitung arah berdasarkan angle
             Vector2 arahTembak = Quaternion.Euler(0, 0, angle) * Vector2.right;
             rb.velocity = arahTembak * tenagaPanah;
             panah.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
@@ -301,39 +356,45 @@ public class Player : MonoBehaviour
 
         waktuCooldown = cooldownTembak;
         
-        Debug.Log($"🔫🔫🔫 Triple shot - Cooldown: {cooldownTembak}");
+        Debug.Log($"🔫🔫🔫 Triple shot fired - Cooldown: {cooldownTembak}");
     }
 
-    // ⭐ RED POTION - FIRING RATE BOOST
     void ActivateRedPotion()
     {
         isRedPotionActive = true;
-        redPotionTimer = 8f; // ⭐ DURASI 8 DETIK
+        redPotionTimer = 8f;
         redPotionCooldownTimer = redPotionCooldown;
         
-        // ⭐ EFFECT: Kurangi cooldown tembak
-        cooldownTembak = defaultCooldownTembak * 0.4f; // 60% lebih cepat
+        cooldownTembak = defaultCooldownTembak * 0.4f;
         
         Debug.Log("🔴 RED POTION ACTIVATED! Firing rate increased for 8 seconds!");
+
+        if (potionPanel != null)
+        {
+            potionPanel.FlashPotion("red");
+        }
     }
 
     void DeactivateRedPotion()
     {
         isRedPotionActive = false;
-        // ⭐ RESET ke default
         cooldownTembak = defaultCooldownTembak;
         
         Debug.Log("🔴 Red Potion expired. Firing rate back to normal.");
     }
 
-    // ⭐ BLUE POTION - TRIPLE SHOT
     void ActivateBluePotion()
     {
         isBluePotionActive = true;
-        bluePotionTimer = 5f; // ⭐ DURASI 5 DETIK
+        bluePotionTimer = 5f;
         bluePotionCooldownTimer = bluePotionCooldown;
         
         Debug.Log("🔵 BLUE POTION ACTIVATED! Triple shot for 5 seconds!");
+
+        if (potionPanel != null)
+        {
+            potionPanel.FlashPotion("blue");
+        }
     }
 
     void DeactivateBluePotion()
@@ -342,14 +403,18 @@ public class Player : MonoBehaviour
         Debug.Log("🔵 Blue Potion expired. Back to single shot.");
     }
 
-    // ⭐ GREEN POTION - PIERCING DAMAGE
     void ActivateGreenPotion()
     {
         isGreenPotionActive = true;
-        greenPotionTimer = 5f; // ⭐ DURASI 5 DETIK
+        greenPotionTimer = 5f;
         greenPotionCooldownTimer = greenPotionCooldown;
         
         Debug.Log("🟢 GREEN POTION ACTIVATED! Double damage for 5 seconds!");
+
+        if (potionPanel != null)
+        {
+            potionPanel.FlashPotion("green");
+        }
     }
 
     void DeactivateGreenPotion()
@@ -368,10 +433,18 @@ public class Player : MonoBehaviour
         return verticalInput;
     }
 
-    // ⭐ METHOD UNTUK UI (Optional)
-    public float GetRedPotionCooldown() { return Mathf.Max(0f, redPotionCooldownTimer); }
-    public float GetBluePotionCooldown() { return Mathf.Max(0f, bluePotionCooldownTimer); }
-    public float GetGreenPotionCooldown() { return Mathf.Max(0f, greenPotionCooldownTimer); }
+    public float GetRedPotionCooldown() 
+    { 
+        return Mathf.Max(0f, redPotionCooldownTimer); 
+    }
+    public float GetBluePotionCooldown() 
+    { 
+        return Mathf.Max(0f, bluePotionCooldownTimer); 
+    }
+    public float GetGreenPotionCooldown() 
+    { 
+        return Mathf.Max(0f, greenPotionCooldownTimer);
+    }
     
     public bool IsRedPotionActive() { return isRedPotionActive; }
     public bool IsBluePotionActive() { return isBluePotionActive; }

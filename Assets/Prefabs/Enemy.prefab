@@ -165,3 +165,13 @@ MonoBehaviour:
   moveSpeed: 7
   scoreValue: 0
   movementType: 0
+  walkFrames:
+  - {fileID: -1559271675, guid: e92a41998e5b6ae41bc65940eb9c4d43, type: 3}
+  - {fileID: -585789064, guid: e92a41998e5b6ae41bc65940eb9c4d43, type: 3}
+  - {fileID: -1765160867, guid: e92a41998e5b6ae41bc65940eb9c4d43, type: 3}
+  - {fileID: 1996637304, guid: e92a41998e5b6ae41bc65940eb9c4d43, type: 3}
+  walkFrameRate: 0.15
+  randomStartFrame: 0
+  hitFlashColor: {r: 1, g: 0, b: 0, a: 1}
+  hitFlashDuration: 0.1
+  deathEffect: {fileID: 0}
